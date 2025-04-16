@@ -1,5 +1,5 @@
-    # Set your Gemini API key
-GOOGLE_GENAI_API_KEY = "TU_API"
+# Set your Gemini API key
+GOOGLE_GENAI_API_KEY = "TU_API_GEMINI_KEY"
 
 if not GOOGLE_GENAI_API_KEY:
     print("Error: GOOGLE_GENAI_API_KEY no encontrada")
@@ -7,40 +7,45 @@ if not GOOGLE_GENAI_API_KEY:
 
 import google.generativeai as genai
 from colorama import init, Fore, Style
+import questionary
 
 init(autoreset=True)
-
 genai.configure(api_key=GOOGLE_GENAI_API_KEY)
 
-def get_deodorant_recommendations(intensity, odor_type, ph_level, age, activity_level, fragrance_pref):
-    """
-    Recommends deodorant brands based on the user's odor profile using the Gemini API.
-    """
+def get_deodorant_recommendations(intensity, odor_type, ph_level, age, activity_level, fragrance_pref, skin_sensitivity, format_pref, brand_pref):
     model = genai.GenerativeModel('gemini-1.5-pro-latest')
 
     prompt = f"""
 Eres un experto en formulación de desodorantes y ciencia olfativa, especializado en el mercado Chileno.
-Basándote en el perfil corporal del usuario, recomienda 3 a 5 desodorantes que se vendan actualmente en farmacias y supermercados en Chile.
+Basándote en el perfil corporal y preferencias del usuario, recomienda entre 3 a 5 desodorantes que se vendan actualmente en farmacias y supermercados en Chile.
+Destaca el mejor desodorante para cada perfil y justifica tu elección.
 
-Solo puedes considerar marcas como: Nivea, Rexona, Dove, Adidas, Old Spice, Axe.
+Solo puedes considerar marcas como: Nivea, Rexona, Dove, Adidas, Old Spice, Axe. Si hay otras que esten en el mercado Chileno pero que no sean mencionadas aqui, incluyelas en tus recomendaciones.
 
 Datos del usuario:
-- Intensidad del Olor: {intensity}
-- Tipo de Olor: {odor_type}
+- Intensidad del olor corporal: {intensity}
+- Tipo de olor corporal: {odor_type}
 - Valor de pH: {ph_level}
 - Edad: {age} años
 - Nivel de actividad física: {activity_level}
 - Preferencia de fragancia: {fragrance_pref}
+- Sensibilidad de piel: {skin_sensitivity}
+- Formato preferido: {format_pref}
+- Preferencia de marca: {brand_pref}
 
 Entrega las recomendaciones en este formato para la terminal:
 
+==========================================
+
 Desodorante: <Nombre del producto>
 
-Descripción: <Breve justificación de por qué lo recomiendas para ese perfil>
 
-Separado por líneas divisorias como "------------------------------"
+Descripción: <Justificación clara y resumida de por qué lo recomiendas para ese perfil>
 
-Sin JSON, sin listas, solo texto plano formateado.
+==========================================
+
+
+Sin listas, sin JSON, solo texto plano.
 """
 
     try:
@@ -50,18 +55,26 @@ Sin JSON, sin listas, solo texto plano formateado.
         return f"Error al obtener recomendaciones: {e}"
 
 def print_header():
-    print(Fore.CYAN + Style.BRIGHT + "\n=============================================")
-    print(Fore.CYAN + Style.BRIGHT + "  RECOMENDADOR DE DESODORANTES CHILE v2.0")
-    print(Fore.CYAN + Style.BRIGHT + "=============================================\n")
+    print(Fore.CYAN + Style.BRIGHT + "\n==============================================")
+    print(Fore.CYAN + Style.BRIGHT + "RECOMENDADOR DE DESODORANTES PARA INFORMÁTICOS")
+    print(Fore.CYAN + Style.BRIGHT + "==============================================\n")
+    print(Fore.LIGHTBLACK_EX + "Porque incluso los bugs huyen de un buen desodorante. 🐞➡️💨")
+    print(Fore.LIGHTBLACK_EX + "¡No dejes que tu código huela peor que tu lógica! 😅")
 
 def main():
-    """
-    Main function to gather user input and display deodorant recommendations.
-    """
     print_header()
 
-    intensity = input("👉 Intensidad de tu olor corporal (leve, moderado, fuerte): ").lower()
-    odor_type = input("👉 Tipo de olor corporal (especiado, almizclado, floral): ").lower()
+    intensity = questionary.select(
+        "👉 Intensidad de tu olor corporal:",
+        choices=["Leve", "Moderado", "Fuerte"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
+
+    odor_type = questionary.select(
+        "👉 Tipo de olor corporal:",
+        choices=["Especiado", "Almizclado", "Floral"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
 
     while True:
         try:
@@ -69,9 +82,9 @@ def main():
             if 0 <= ph_level <= 14:
                 break
             else:
-                print(Fore.RED + "⚠️  El valor de pH debe estar entre 0 y 14.")
+                print(Fore.RED + "⚠️  Debe estar entre 0 y 14.")
         except ValueError:
-            print(Fore.RED + "⚠️  Por favor, ingresa un número válido para el pH.")
+            print(Fore.RED + "⚠️  Ingresa un número válido.")
 
     while True:
         try:
@@ -81,20 +94,48 @@ def main():
             else:
                 print(Fore.RED + "⚠️  Ingresa una edad válida.")
         except ValueError:
-            print(Fore.RED + "⚠️  Por favor, ingresa un número entero para la edad.")
+            print(Fore.RED + "⚠️  Solo se aceptan números enteros.")
 
-    activity_level = input("👉 Nivel de actividad física (bajo, medio, alto): ").lower()
-    fragrance_pref = input("👉 Preferencia de fragancia (cítrico, fresco, floral, sin fragancia): ").lower()
+    activity_level = questionary.select(
+        "👉 Nivel de actividad física:",
+        choices=["Bajo", "Medio", "Alto"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
 
-    print(Fore.YELLOW + "\nObteniendo recomendaciones...\n")
+    fragrance_pref = questionary.select(
+        "👉 Preferencia de fragancia:",
+        choices=["Cítrico", "Fresco", "Floral", "Sin fragancia"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
+
+    skin_sensitivity = questionary.select(
+        "👉 Sensibilidad de tu piel:",
+        choices=["Normal", "Sensible", "Muy sensible"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
+
+    format_pref = questionary.select(
+        "👉 Formato preferido de desodorante:",
+        choices=["Spray", "Barra", "Roll-on", "Sin preferencia"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
+
+    brand_pref = questionary.select(
+        "👉 Preferencia de marca:",
+        choices=["Nivea", "Rexona", "Dove", "Adidas", "Old Spice", "Axe", "Sin preferencia"],
+        instruction="Usa las flechas ↑ ↓ y Enter"
+    ).ask().lower()
+
+    print(Fore.YELLOW + "\nProcesando tus datos... 🖥️\n")
 
     recommendations = get_deodorant_recommendations(
-        intensity, odor_type, ph_level, age, activity_level, fragrance_pref
+        intensity, odor_type, ph_level, age, activity_level,
+        fragrance_pref, skin_sensitivity, format_pref, brand_pref
     )
 
     print(Fore.GREEN + "===== TUS RECOMENDACIONES =====\n")
     print(recommendations)
-    print(Fore.CYAN + "\nGracias por usar el recomendador 👃✨")
-
+    print(Fore.CYAN + "\nGracias por usar el recomendador. ¡Que tu código y tú siempre huelan bien! 🧼")
+    
 if __name__ == "__main__":
     main()
