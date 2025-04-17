@@ -1,24 +1,21 @@
-# Configura tu clave de Gemini API
-GENAI_API_KEY = "TU_API_GEMINI_KEY"
-if not GENAI_API_KEY:
-    print("Error: GENAI_API_KEY no encontrada")
-    exit()
-
-# Importa la librería genai en lugar de google.generativeai
-import genai
+import requests
 from colorama import init, Fore, Style
 import questionary
 
 # Inicializa colorama
 init(autoreset=True)
 
-# Configura la API key
-genai.configure(api_key=GENAI_API_KEY)
+# Configura tu clave de Gemini API
+GENAI_API_KEY = "TU_CLAVE_API"
+if not GENAI_API_KEY:
+    print("Error: GENAI_API_KEY no encontrada")
+    exit()
+
+# URL del endpoint REST de Gemini (usaremos el modelo gemini-pro)
+GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
 
 # Función para obtener recomendaciones de desodorantes
 def get_deodorant_recommendations(intensity, odor_type, ph_level, age, activity_level, fragrance_pref, skin_sensitivity, format_pref, brand_pref):
-    # Selecciona el modelo Gemini adecuado
-    model = genai.GenerativeModel('gemini-1.5-pro-latest')
     prompt = f"""
 Eres un experto en formulación de desodorantes y ciencia olfativa, especializado en el mercado Chileno.
 Basándote en el perfil corporal y preferencias del usuario, recomienda entre 3 a 5 desodorantes que se vendan actualmente en farmacias y supermercados en Chile.
@@ -41,9 +38,21 @@ Descripción: <Justificación clara y resumida de por qué lo recomiendas para e
 ==========================================
 Sin listas, sin JSON, solo texto plano.
 """
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GENAI_API_KEY
+    }
+
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        response = requests.post(GEMINI_ENDPOINT, headers=headers, json=data)
+        response.raise_for_status()
+        result = response.json()
+        return result["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         return f"Error al obtener recomendaciones: {e}"
 
